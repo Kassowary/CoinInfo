@@ -1,0 +1,1111 @@
+import datetime
+import json
+
+
+from parser_script import *
+
+collections_lst = {} # Словник колекцій
+price = 0 # Загальна вартість всіх колекцій
+action_lst = [] # Список дій
+_action_lst = [] # Список дій №2
+a_path = None # Шлях до поточного зображення аверсу
+r_path = None # Шлях до поточного зображення реверсу
+edge_path = None # Шлях до поточного зображення гурта
+
+app = QApplication([])
+screen = QWidget()
+screen.setWindowTitle("CoinInfo")
+screen.setWindowIcon(QIcon("images/ico.png"))
+screen.resize(750, 500)
+screen.setMinimumSize(screen.size())
+screen.setMaximumSize(screen.size())
+is_follow = False
+is_coin = False
+is_coin_follow = False
+
+tab_1 = QTabBar()
+tab_2 = QTabBar()
+group = QActionGroup(None)
+group.exclusionPolicy()
+tab_1.addTab("Мої колекції")
+tab_1.addTab("Додати колекцію")
+tab_1.addTab("Аналітика")
+tab_1.addTab("Допомога")
+no_collection_text = QLabel("                      У вас немає жодної колекції.\n Щоб додати колекцію перейдіть в меню \"Додати колекцію\". ")
+collection_name = QLineEdit()
+collection_name.setPlaceholderText("Введіть назву колекції")
+collection_name.hide()
+create_collection = QPushButton("Створити колекцію")
+create_collection.hide()
+a_text_1 = QLabel("Всього колекцій: " + str(len(collections_lst)))
+a_text_1.hide()
+a_text_2 = QLabel("Загальна ціна: " + str(price))
+a_text_2.hide()
+collections_bar = QToolBar()
+collections_bar.setOrientation(Qt.Horizontal)
+collections_bar.hide()
+images_list = QComboBox()
+images_list.addItem("Червоний")
+images_list.addItem("Синій")
+images_list.addItem("Зелений")
+images_list.addItem("Жовтий")
+images_list.addItem("Чорний")
+images_list.addItem("Оранжевий")
+images_list.addItem("Фіолетовий")
+images_list.hide()
+image_text = QLabel("Виберіть колір для колекції")
+image_text.hide()
+redact_collection_button = QPushButton("Редагувати колекцію")
+delete_collection_button = QPushButton("Видалити колекцію")
+no_coin_text = QLabel("                      У вас немає жодної монети.\n Щоб додати монету перейдіть в меню \"Додати монету\". ")
+add_coin = QPushButton("Додати монету")
+add_coin.hide()
+coin_year = QLineEdit()
+coin_year.setPlaceholderText("Введіть рік")
+coin_year.hide()
+coin_face_value_text = QLabel("Номінал:")
+coin_face_value_text.hide()
+coin_face_value = QComboBox()
+coin_face_value.addItem("1/12")
+coin_face_value.addItem("1/4")
+coin_face_value.addItem("1/2")
+coin_face_value.addItem("1")
+coin_face_value.addItem("1.5")
+coin_face_value.addItem("2")
+coin_face_value.addItem("2.5")
+coin_face_value.addItem("3")
+coin_face_value.addItem("4")
+coin_face_value.addItem("5")
+coin_face_value.addItem("10")
+coin_face_value.addItem("12")
+coin_face_value.addItem("15")
+coin_face_value.addItem("17.5")
+coin_face_value.addItem("20")
+coin_face_value.addItem("25")
+coin_face_value.addItem("50")
+coin_face_value.addItem("75")
+coin_face_value.addItem("100")
+coin_face_value.addItem("200")
+coin_face_value.addItem("1000")
+coin_face_value.addItem("2000")
+coin_face_value.addItem("2000000")
+coin_face_value.addItem("Інше")
+coin_face_value.hide()
+coin_name = QLineEdit()
+coin_name.setPlaceholderText("Введіть грошову одиницю")
+coin_name.hide()
+coin_country = QLineEdit()
+coin_country.setPlaceholderText("Введіть країну")
+coin_country.hide()
+coin_quality_text = QLabel("Стан/Якість карбування:")
+coin_quality_text.hide()
+coin_quality = QComboBox()
+coin_quality.addItem("PROOF")
+coin_quality.addItem("BU")
+coin_quality.addItem("UNC")
+coin_quality.addItem("XF")
+coin_quality.addItem("VF")
+coin_quality.addItem("F")
+coin_quality.addItem("VG")
+coin_quality.addItem("G")
+coin_quality.hide()
+coin_value = QLineEdit()
+coin_value.setPlaceholderText("Введіть вартість (грн)")
+coin_value.hide()
+coin_metal_text = QLabel("Метал:")
+coin_metal_text.hide()
+coin_metal = QComboBox()
+coin_metal.addItem("Алюміній")
+coin_metal.addItem("Нікель")
+coin_metal.addItem("Цинк")
+coin_metal.addItem("Мідно-нікелевий сплав")
+coin_metal.addItem("Мідь")
+coin_metal.addItem("Бронза")
+coin_metal.addItem("Білон")
+coin_metal.addItem("Срібло 0.750")
+coin_metal.addItem("Срібло 0.800")
+coin_metal.addItem("Срібло 0.835")
+coin_metal.addItem("Срібло 0.900")
+coin_metal.addItem("Срібло 0.925")
+coin_metal.addItem("Срібло 0.999")
+coin_metal.addItem("Золото 0.875")
+coin_metal.addItem("Золото 0.900")
+coin_metal.addItem("Золото 0.917")
+coin_metal.addItem("Золото 0.986")
+coin_metal.addItem("Золото 0.999")
+coin_metal.addItem("Свинець")
+coin_metal.addItem("Алюміній-бронза")
+coin_metal.addItem("Латунь")
+coin_metal.addItem("Нержавіюча сталь")
+coin_metal.addItem("Біметал")
+coin_metal.addItem("Нейзильбер")
+coin_metal.addItem("Залізо")
+coin_metal.addItem("Паладій")
+coin_metal.addItem("Платина")
+coin_metal.addItem("Срібло з позолотою")
+coin_metal.addItem("Триметал")
+coin_metal.addItem("Сталь з нікелевим покриттям")
+coin_metal.hide()
+add_image_button = QPushButton("Додати зображення")
+add_image_button.hide()
+edge_check = QCheckBox()
+edge_text = QLabel("Гурт")
+edge_image = QLabel()
+edge_button = QPushButton("Завантажити")
+line_2 = QHBoxLayout()
+line_3 = QHBoxLayout()
+line_4 = QHBoxLayout()
+a_image = QLabel()
+r_image = QLabel()
+edge_image = QLabel()
+a_button = QPushButton()
+r_button = QPushButton()
+edge_button = QPushButton()
+help_frame_1 = QTextEdit()
+help_frame_1.setText("Щоб створити нову колекцію перейдіть в меню \"Додати колекцію\". Після створення колекції вона з'явиться у меню \"Мої колекції\" у вигляді піктограми певного колору, який можна вибрати при створенні колекції. Ви можете редагувати колекцію, тобто змінювати її назву, колір піктограми, створювати і видаляти монети.")
+help_frame_1.hide()
+help_frame_1.setEnabled(False)
+help_frame_2 = QTextEdit()
+help_frame_2.setText("Щоб дадати монету в колекцію потрібно вибрати колекцію, в яку ви хочете додати монету і натиснути кнопку \"Редагувати колекцію\". У новому вікні виберіть меню \"Додати монету\". В цьому меню ви можете налаштувати монету, а щоб додати зображення аверса, реверса і навіть гурта ви повинні натиснути на кнопку \"Додати зображення\". В новому вікні ви можете обрати фото для всіх частин монети з вашого комп'ютера")
+help_frame_2.hide()
+help_frame_2.setEnabled(False)
+coin_bar = QToolBar()
+coin_bar.setOrientation(Qt.Horizontal)
+group_ = QActionGroup(None)
+group_.exclusionPolicy()
+redact_collection_name = QLineEdit()
+redact_images_text = QLabel("Виберіть новий колір для колекції")
+redact_images_list = QComboBox()
+redact_images_list.addItem("Червоний")
+redact_images_list.addItem("Синій")
+redact_images_list.addItem("Зелений")
+redact_images_list.addItem("Жовтий")
+redact_images_list.addItem("Чорний")
+redact_images_list.addItem("Оранжевий")
+redact_images_list.addItem("Фіолетовий")
+save_collection_button = QPushButton("Зберегти зміни в колекцію")
+delete_coin_button = QPushButton("Видалити монету")
+check_button = QPushButton("Переглянути")
+graph = pyqtgraph.PlotWidget()
+graph.setBackground((230, 230, 230))
+graph.setLineWidth(100)
+graph.setTitle("Загальна ціна", color = (200, 100, 100), size = "10pt")
+graph.showGrid(x = False, y = True)
+pen = pyqtgraph.mkPen(200, 100, 100, width=3)
+graph.setLabel("bottom", "Дата (Числовий формат)")
+graph.setLabel("left", "Ціна (Грн)")
+graph.hide()
+l_coin_value = QLineEdit()
+l_coin_value.hide()
+ukr_coins = QComboBox()
+ukr_coins.addItems(data["Ukr"])
+ukr_coins.hide()
+price_text = QLabel("Ціна: " + data["Price"][ukr_coins.currentIndex()])
+price_text.hide()
+search_line = QLineEdit()
+search_line.setPlaceholderText("Пошук")
+search_line.hide()
+search_button = QPushButton("Шукати")
+search_button.hide()
+
+with open("collection_list.json", "r") as file:
+    collections_lst = json.load(file)
+
+def format_date(time):
+    time = time.split("-")
+    _time_ = 0
+    _time_ += int(time[0]) / 1
+    _time_ += int(time[1]) / 12
+    _time_ += int(time[2]) / 372
+    return round(_time_, 5)
+
+def format_price_graph(p, d):
+    global graph
+    graph.setXRange(round(min(d)-min(d)*0.00000001, 6), round(max(d)+max(d)*0.0000001, 6))
+    graph.setYRange(min(p)-min(p)*0.2, max(p)+max(p)*0.2)
+
+def follow_collection(): # Пов'язуємо обрану колекцію, тобто обрану дію із колекцією із бази данних іперевіряємо наявність в ній монет
+    global is_coin
+    for i in action_lst:
+        if i.isChecked():
+            for q in collections_lst:
+                if i.text() == q:
+                    if len(collections_lst[q][1]) == 0:
+                        is_coin = False
+
+def load_collections(): # Завантажуємо колекції з баз даних до локального словника, передаючи їм зображення, дозволяємо діям бути обраними, під'єднюємо їх з функцією вибору дій і додаємо дії в меню дій
+    global collections_lst, action_lst
+    with open("collection_list.json", "r", encoding="utf-8") as file:
+        collections_lst = json.load(file)
+    for i in collections_lst:
+        if collections_lst[i][0] == "Червоний":
+            action = QAction(QIcon("images\\red.png"), i)
+        elif collections_lst[i][0] == "Синій":
+            action = QAction(QIcon("images\\blue.png"), i)
+        elif collections_lst[i][0] == "Жовтий":
+            action = QAction(QIcon("images\\yellow.png"), i)
+        elif collections_lst[i][0] == "Зелений":
+            action = QAction(QIcon("images\\green.png"), i)
+        elif collections_lst[i][0] == "Чорний":
+            action = QAction(QIcon("images\\black.png"), i)
+        elif collections_lst[i][0] == "Оранжевий":
+            action = QAction(QIcon("images\\orange.png"), i)
+        elif collections_lst[i][0] == "Фіолетовий":
+            action = QAction(QIcon("images\\purple.png"), i)
+        try:
+            action.setCheckable(True)
+            action.triggered.connect(follow_collection)
+            action_lst.append(action)
+            collections_bar.addAction(action)
+            group.addAction(action)
+        except:
+            print(i)
+
+
+def paragraph_change(): # Змінюємо обрані меню і відповідно приховуємо, чи показуємо віджети
+    global collections_lst, a_text_1, a_text_2, price, graph, data, ukr_coins, price_text, search_button, search_line
+    if tab_1.currentIndex() == 0:
+        collections_bar.clear()
+        images_list.hide()
+        image_text.hide()
+        if len(collections_lst) == 0:
+            no_collection_text.show()
+        else:
+            no_collection_text.hide()
+            load_collections()
+            collections_bar.show()
+            for i in action_lst:
+                i.setChecked(False)
+        collection_name.hide()
+        create_collection.hide()
+        a_text_1.hide()
+        a_text_2.hide()
+        redact_collection_button.show()
+        delete_collection_button.show()
+        help_frame_1.hide()
+        help_frame_2.hide()
+        graph.hide()
+        ukr_coins.hide()
+        price_text.hide()
+        search_button.hide()
+        search_line.hide()
+    elif tab_1.currentIndex() == 1:
+        image_text.show()
+        collections_bar.hide()
+        no_collection_text.hide()
+        collection_name.show()
+        create_collection.show()
+        images_list.show()
+        a_text_1.hide()
+        a_text_2.hide()
+        collection_name.clear()
+        redact_collection_button.hide()
+        delete_collection_button.hide()
+        help_frame_1.hide()
+        help_frame_2.hide()
+        graph.hide()
+        ukr_coins.hide()
+        price_text.hide()
+        search_button.hide()
+        search_line.hide()
+    elif tab_1.currentIndex() == 2:
+        collections_bar.hide()
+        a_text_1.setText("Всього колекцій: " + str(len(collections_lst)))
+        a_text_2.setText("Загальна ціна: " + str(price))
+        no_collection_text.hide()
+        collection_name.hide()
+        create_collection.hide()
+        a_text_1.show()
+        a_text_2.show()
+        images_list.hide()
+        image_text.hide()
+        redact_collection_button.hide()
+        delete_collection_button.hide()
+        help_frame_1.hide()
+        help_frame_2.hide()
+        graph.show()
+        update_price()
+        with open("data.json", "r", encoding="utf-8") as file:
+            data = json.load(file)
+        ukr_coins.show()
+        price_text.show()
+        search_button.show()
+        search_line.show()
+    elif tab_1.currentIndex() == 3:
+        collections_bar.hide()
+        no_collection_text.hide()
+        a_text_1.hide()
+        a_text_2.hide()
+        collection_name.clear()
+        redact_collection_button.hide()
+        delete_collection_button.hide()
+        images_list.hide()
+        image_text.hide()
+        create_collection.hide()
+        collection_name.hide()
+        help_frame_1.show()
+        help_frame_2.show()
+        graph.hide()
+        ukr_coins.hide()
+        price_text.hide()
+        search_line.hide()
+        search_button.hide()
+def paragraph_change_2():
+    global is_coin, no_coin_text, tab_2, add_coin, coin_year, coin_face_value_text, coin_face_value, coin_name, coin_country, coin_quality_text, coin_quality, coin_value, coin_metal, coin_metal_text, add_image_button, coin_bar, redact_collection_name, redact_images_text, redact_images_list, save_collection_button, delete_coin_button, check_button
+    if tab_2.currentIndex() == 0:
+        if not is_coin:
+            no_coin_text.show()
+            coin_bar.hide()
+        else:
+            load_coins()
+            coin_bar.show()
+            no_coin_text.hide()
+        add_coin.hide()
+        coin_year.hide()
+        coin_face_value_text.hide()
+        coin_face_value.hide()
+        coin_name.hide()
+        coin_country.hide()
+        coin_quality_text.hide()
+        coin_quality.hide()
+        coin_value.hide()
+        coin_metal.hide()
+        coin_metal_text.hide()
+        add_image_button.hide()
+        redact_collection_name.hide()
+        redact_images_text.hide()
+        redact_images_list.hide()
+        save_collection_button.hide()
+        check_button.show()
+        delete_coin_button.show()
+    elif tab_2.currentIndex() == 1:
+        no_coin_text.hide()
+        add_coin.show()
+        coin_year.show()
+        coin_face_value_text.show()
+        coin_face_value.show()
+        coin_name.show()
+        coin_country.show()
+        coin_quality_text.show()
+        coin_quality.show()
+        coin_value.show()
+        coin_metal.show()
+        coin_metal_text.show()
+        add_image_button.show()
+        coin_bar.hide()
+        redact_collection_name.hide()
+        redact_images_text.hide()
+        redact_images_list.hide()
+        save_collection_button.hide()
+        check_button.hide()
+        delete_coin_button.hide()
+        coin_metal.setCurrentIndex(0)
+        coin_quality.setCurrentIndex(0)
+        coin_year.clear()
+        coin_face_value.setCurrentIndex(0)
+        coin_country.clear()
+        coin_name.clear()
+        coin_value.clear()
+    elif tab_2.currentIndex() == 2:
+        no_coin_text.hide()
+        add_coin.hide()
+        coin_year.hide()
+        coin_face_value_text.hide()
+        coin_face_value.hide()
+        coin_name.hide()
+        coin_country.hide()
+        coin_quality_text.hide()
+        coin_quality.hide()
+        coin_value.hide()
+        coin_metal.hide()
+        coin_metal_text.hide()
+        add_image_button.hide()
+        coin_bar.hide()
+        redact_collection_name.show()
+        redact_images_text.show()
+        redact_images_list.show()
+        save_collection_button.show()
+        check_button.hide()
+        delete_coin_button.hide()
+def _create_collection_(): # Створюємо колекції, якщо не введено ім'я для колекції, то створюємо вікно, де ми бачимо помилку
+    if len(collection_name.text()) > 0:
+        if collection_name.text() not in collections_lst.keys():
+            collections_lst[collection_name.text()] = [images_list.currentText()]
+            collections_lst[collection_name.text()].append({})
+            with open("collection_list.json", "w", encoding="utf-8") as file:
+                json.dump(collections_lst, file, ensure_ascii=False)
+        else:
+            app_ = QDialog()
+            app_.setWindowTitle("Помилка: Вже є колекція з таким ім'ям")
+            app_.resize(600, 100)
+
+            app_.exec()
+    else:
+        app_ = QDialog()
+        app_.setWindowTitle("Помилка: Введіть ім'я колекції")
+        app_.resize(600, 100)
+
+        app_.exec()
+
+def redact_collection(): # Змінюємо колекцію, спочатку перевіряємо чи обрана колекція, якщо обрана, то створюємо вікно редагування колекції, інакше, створюємо вікно з помилкою
+    global is_follow, is_coin, no_coin_text, tab_2, add_coin, coin_year, coin_face_value_text, coin_face_value, coin_name, coin_country, coin_quality_text, coin_quality, coin_value, coin_metal, coin_metal_text, add_image_button, coin_bar, group_, redact_collection_name, redact_images_text, redact_images_list, save_collection_button, delete_coin_button, check_button
+    is_coin = False
+    is_follow = False
+    for i in action_lst:
+        if i.isChecked():
+            is_follow = True
+            redact_collection_name = QLineEdit()
+            redact_collection_name.setText(i.text())
+            redact_images_list = QComboBox()
+            redact_images_list.addItem("Червоний")
+            redact_images_list.addItem("Синій")
+            redact_images_list.addItem("Зелений")
+            redact_images_list.addItem("Жовтий")
+            redact_images_list.addItem("Чорний")
+            redact_images_list.addItem("Оранжевий")
+            redact_images_list.addItem("Фіолетовий")
+            redact_images_list.setCurrentText(collections_lst[i.text()][0])
+            if len(collections_lst[i.text()][1]) > 0:
+                is_coin = True
+    tab_2 = QTabBar()
+    tab_2.addTab("Перегляд колекції")
+    tab_2.addTab("Додати монету")
+    tab_2.addTab("Редагувати дані")
+    tab_2.currentChanged.connect(paragraph_change_2)
+    add_coin = QPushButton("Додати монету")
+    add_coin.clicked.connect(_add_coin_)
+    coin_year = QLineEdit()
+    coin_year.setPlaceholderText("Введіть рік")
+    coin_face_value_text = QLabel("Номінал:")
+    coin_face_value = QComboBox()
+    coin_face_value.addItem("1/12")
+    coin_face_value.addItem("1/4")
+    coin_face_value.addItem("1/2")
+    coin_face_value.addItem("1")
+    coin_face_value.addItem("1.5")
+    coin_face_value.addItem("2")
+    coin_face_value.addItem("2.5")
+    coin_face_value.addItem("3")
+    coin_face_value.addItem("4")
+    coin_face_value.addItem("5")
+    coin_face_value.addItem("10")
+    coin_face_value.addItem("12")
+    coin_face_value.addItem("15")
+    coin_face_value.addItem("17.5")
+    coin_face_value.addItem("20")
+    coin_face_value.addItem("25")
+    coin_face_value.addItem("50")
+    coin_face_value.addItem("75")
+    coin_face_value.addItem("100")
+    coin_face_value.addItem("200")
+    coin_face_value.addItem("1000")
+    coin_face_value.addItem("2000")
+    coin_face_value.addItem("2000000")
+    coin_face_value.addItem("Інше")
+    coin_name = QLineEdit()
+    coin_name.setPlaceholderText("Введіть грошову одиницю + (Найменування/Номер різновиду)")
+    coin_country = QLineEdit()
+    coin_country.setPlaceholderText("Введіть країну")
+    coin_quality_text = QLabel("Стан/Якість карбування:")
+    coin_quality = QComboBox()
+    coin_quality.addItem("PROOF")
+    coin_quality.addItem("BU")
+    coin_quality.addItem("UNC")
+    coin_quality.addItem("XF")
+    coin_quality.addItem("VF")
+    coin_quality.addItem("F")
+    coin_quality.addItem("VG")
+    coin_quality.addItem("G")
+    coin_value = QLineEdit()
+    coin_value.setPlaceholderText("Введіть вартість (грн)")
+    coin_metal_text = QLabel("Метал:")
+    coin_metal = QComboBox()
+    coin_metal.addItem("Алюміній")
+    coin_metal.addItem("Нікель")
+    coin_metal.addItem("Цинк")
+    coin_metal.addItem("Мідно-нікелевий сплав")
+    coin_metal.addItem("Мідь")
+    coin_metal.addItem("Бронза")
+    coin_metal.addItem("Білон")
+    coin_metal.addItem("Срібло 0.750")
+    coin_metal.addItem("Срібло 0.800")
+    coin_metal.addItem("Срібло 0.835")
+    coin_metal.addItem("Срібло 0.900")
+    coin_metal.addItem("Срібло 0.925")
+    coin_metal.addItem("Срібло 0.999")
+    coin_metal.addItem("Золото 0.875")
+    coin_metal.addItem("Золото 0.900")
+    coin_metal.addItem("Золото 0.917")
+    coin_metal.addItem("Золото 0.986")
+    coin_metal.addItem("Золото 0.999")
+    coin_metal.addItem("Свинець")
+    coin_metal.addItem("Алюміній-бронза")
+    coin_metal.addItem("Латунь")
+    coin_metal.addItem("Нержавіюча сталь")
+    coin_metal.addItem("Біметал")
+    coin_metal.addItem("Нейзильбер")
+    coin_metal.addItem("Залізо")
+    coin_metal.addItem("Паладій")
+    coin_metal.addItem("Платина")
+    coin_metal.addItem("Срібло з позолотою")
+    coin_metal.addItem("Триметал")
+    coin_metal.addItem("Сталь з нікелевим покриттям")
+    coin_metal.addItem("Інше")
+    add_image_button = QPushButton("Додати зображення")
+    add_image_button.clicked.connect(load_image)
+    redact_images_text = QLabel("Виберіть новий колір для колекції")
+    save_collection_button = QPushButton("Зберегти зміни в колекцію")
+    save_collection_button.clicked.connect(save_collection_data)
+    delete_coin_button = QPushButton("Видалити монету")
+    delete_coin_button.clicked.connect(delete_coin)
+    check_button = QPushButton("Переглянути")
+    check_button.clicked.connect(check)
+    check_button.hide()
+    no_coin_text = QLabel("                      У вас немає жодної монети.\n Щоб додати монету перейдіть в меню \"Додати монету\". ")
+    coin_bar = QToolBar()
+    coin_bar.setOrientation(Qt.Horizontal)
+    coin_bar.hide()
+    group = QActionGroup(None)
+    group.exclusionPolicy()
+    redact_dialog = QDialog()
+    if is_follow:
+        paragraph_change_2()
+        redact_dialog.setWindowTitle("Редагування колекції")
+        redact_dialog.resize(700, 500)
+        redact_dialog.setMaximumSize(redact_dialog.size())
+        redact_dialog.setMinimumSize(redact_dialog.size())
+        main_line = QVBoxLayout()
+        line_1 = QHBoxLayout()
+        line_2 = QHBoxLayout()
+        line_3 = QHBoxLayout()
+        line_4 = QHBoxLayout()
+        line_5 = QHBoxLayout()
+        line_6 = QHBoxLayout()
+        line_7 = QHBoxLayout()
+        line_8 = QHBoxLayout()
+        line_9 = QHBoxLayout()
+        line_10 = QHBoxLayout()
+        line_0 = QVBoxLayout()
+        line_11 = QVBoxLayout()
+        _line = QHBoxLayout()
+        main_line.addLayout(line_1)
+        main_line.addLayout(line_11)
+        main_line.addLayout(line_2)
+        main_line.addLayout(line_3)
+        main_line.addLayout(line_4)
+        main_line.addLayout(line_5)
+        main_line.addLayout(line_6)
+        main_line.addLayout(line_7)
+        main_line.addLayout(line_8)
+        main_line.addLayout(line_9)
+        main_line.addLayout(line_10)
+        main_line.addLayout(line_0)
+        redact_dialog.setLayout(main_line)
+        line_1.addWidget(tab_2, alignment=Qt.AlignTop)
+        main_line.addWidget(no_coin_text, alignment=Qt.AlignTop)
+        main_line.addWidget(check_button)
+        main_line.addWidget(delete_coin_button)
+        line_2.addWidget(coin_metal_text, alignment=Qt.AlignLeft)
+        line_2.addWidget(coin_metal)
+        line_3.addWidget(coin_quality_text, alignment=Qt.AlignLeft)
+        line_3.addWidget(coin_quality)
+        line_4.addWidget(coin_face_value_text, alignment=Qt.AlignLeft)
+        line_4.addWidget(coin_face_value)
+        line_5.addWidget(coin_year)
+        line_6.addWidget(coin_name)
+        line_7.addWidget(coin_country)
+        line_8.addWidget(coin_value)
+        line_9.addWidget(add_image_button)
+        line_10.addWidget(add_coin)
+        line_0.addWidget(coin_bar, alignment=Qt.AlignTop)
+        line_11.addWidget(redact_collection_name)
+        line_11.addLayout(_line)
+        _line.addWidget(redact_images_text, alignment=Qt.AlignLeft)
+        _line.addWidget(redact_images_list, alignment=Qt.AlignRight)
+        line_11.addWidget(save_collection_button)
+        if not is_coin:
+            no_coin_text.show()
+    else:
+        redact_dialog.setWindowTitle("Помилка: виберіть колекцію для редагування")
+        redact_dialog.resize(750, 100)
+    redact_dialog.show()
+    redact_collection_button.clicked.disconnect()
+    delete_collection_button.clicked.disconnect()
+    redact_dialog.exec()
+    redact_collection_button.clicked.connect(redact_collection)
+    delete_collection_button.clicked.connect(delete_collection)
+
+def delete_collection():
+    global is_follow
+    for i in action_lst:
+        if i.isChecked():
+            is_follow = True
+            action_lst.remove(i)
+            print(action_lst)
+            collections_lst.pop(i.text())
+            collections_bar.removeAction(i)
+            if len(collections_lst) == 0:
+                no_collection_text.show()
+    if is_follow:
+        pass
+    else:
+        dialog = QDialog()
+        dialog.setWindowTitle("Помилка: виберіть колекцію для видалення")
+        dialog.resize(750, 100)
+
+        dialog.show()
+        dialog.exec()
+    with open("collection_list.json", "w", encoding="utf-8") as file:
+        json.dump(collections_lst, file, ensure_ascii=False)
+
+def save_collection_data():
+    global redact_images_list, redact_collection_name
+    for i in action_lst:
+        if i.isChecked():
+            collections_lst[redact_collection_name.text()] = collections_lst.pop(i.text())
+            collections_lst[redact_collection_name.text()][0] = redact_images_list.currentText()
+            #action_lst.remove(i)
+            #collections_bar.removeAction(i)
+            with open("collection_list.json", "w", encoding="utf-8") as file:
+                json.dump(collections_lst, file, ensure_ascii=False)
+            collections_bar.clear()
+            load_collections()
+def _add_coin_():
+    global coin_year, coin_face_value, coin_name, coin_country, coin_quality, coin_value, coin_metal
+    for i in action_lst:
+        if i.isChecked():
+            try:
+                int(coin_year.text())
+            except:
+                error_dialog = QDialog()
+                error_dialog.setWindowTitle("Помилка: неприпустимі дані для року монети")
+                error_dialog.resize(750, 100)
+
+                error_dialog.show()
+                error_dialog.exec()
+            try:
+                int(coin_value.text())
+            except:
+                error_dialog = QDialog()
+                error_dialog.setWindowTitle("Помилка: неприпустимі дані для вартості монети")
+                error_dialog.resize(800, 100)
+
+                error_dialog.show()
+                error_dialog.exec()
+            try:
+                1 / len(coin_name.text())
+            except:
+                error_dialog = QDialog()
+                error_dialog.setWindowTitle("Помилка: введіть дані про найменування і/або грошову одиницю")
+                error_dialog.resize(1000, 100)
+
+                error_dialog.show()
+                error_dialog.exec()
+            try:
+                1 / len(coin_country.text())
+            except:
+                error_dialog = QDialog()
+                error_dialog.setWindowTitle("Помилка: введіть дані про країну")
+                error_dialog.resize(650, 100)
+
+                error_dialog.show()
+                error_dialog.exec()
+            try:
+                collections_lst[i.text()][1][coin_face_value.currentText() + " " + coin_name.text() + " " + coin_year.text()] = {"Рік": int(coin_year.text()), "Номінал": coin_face_value.currentText(), "Країна": coin_country.text(), "Стан": coin_quality.currentText(),  "Метал": coin_metal.currentText(), "Вартість": int(coin_value.text()), "Зображення": {"Аверс": "images\\none_image.jpg", "Реверс": "images\\none_image.jpg"}}
+            except:
+                pass
+    with open("collection_list.json", "w", encoding="utf-8") as file:
+        json.dump(collections_lst, file, ensure_ascii=False)
+    load_coins()
+    update_price()
+    format_price_graph(data["Price data"], data["Date data"])
+
+def load_image():
+    global edge_check, edge_text, edge_image, edge_button, line_2, line_3, line_4, a_image, r_image, edge_image, a_button, r_button, edge_button
+    image_dialog = QDialog()
+    image_dialog.setWindowTitle("Завантаження зображень")
+    image_dialog.resize(700, 400)
+    image_dialog.setMaximumSize(image_dialog.size())
+    image_dialog.setMinimumSize(image_dialog.size())
+
+    main_line = QVBoxLayout()
+    line_1 = QHBoxLayout()
+    line_2 = QHBoxLayout()
+    line_3 = QHBoxLayout()
+    line_4 = QHBoxLayout()
+    line_5 = QHBoxLayout()
+
+    a_text = QLabel("Аверс")
+    r_text = QLabel("Реверс")
+    _edge_text_ = QLabel("Додати Гурт")
+    edge_check = QCheckBox()
+    edge_check.clicked.connect(_edge_)
+    edge_text = QLabel("Гурт")
+    edge_text.hide()
+    a_map = QPixmap("images\\load_image.jpg")
+    a_map = a_map.scaled(50, 50)
+    a_image = QLabel()
+    a_image.setPixmap(a_map)
+    a_image.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+    r_map = QPixmap("images\\load_image.jpg")
+    r_map = r_map.scaled(50, 50)
+    r_image = QLabel()
+    r_image.setPixmap(r_map)
+    r_image.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+    edge_map = QPixmap("images\\load_image.jpg")
+    edge_map = edge_map.scaled(50, 50)
+    edge_image = QLabel()
+    edge_image.setPixmap(edge_map)
+    edge_image.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+    edge_image.hide()
+    a_button = QPushButton("Завантажити")
+    r_button = QPushButton("Завантажити")
+    edge_button = QPushButton("Завантажити")
+    edge_button.hide()
+    a_button.clicked.connect(catalog_a)
+    r_button.clicked.connect(catalog_r)
+    edge_button.clicked.connect(catalog_edge)
+    save_button = QPushButton("Зберегти")
+    save_button.clicked.connect(save_images)
+
+    line_4.addWidget(a_text)
+    line_4.addWidget(a_image)
+    line_4.addWidget(a_button)
+    line_2.addWidget(r_text)
+    line_2.addWidget(r_image)
+    line_2.addWidget(r_button)
+    line_3.addWidget(edge_text)
+    line_3.addWidget(edge_image)
+    line_3.addWidget(edge_button)
+    line_1.addWidget(_edge_text_)
+    line_1.addWidget(edge_check, alignment=Qt.AlignRight)
+    line_5.addWidget(save_button)
+
+    main_line.addLayout(line_1)
+    main_line.addLayout(line_4)
+    main_line.addLayout(line_2)
+    main_line.addLayout(line_3)
+    main_line.addLayout(line_5)
+
+    image_dialog.setLayout(main_line)
+
+    image_dialog.show()
+    add_image_button.clicked.disconnect()
+    image_dialog.exec()
+    add_image_button.clicked.connect(load_image)
+def _edge_():
+    global edge_check, edge_text, edge_image, edge_button
+    if edge_check.isChecked():
+        edge_text.show()
+        edge_image.show()
+        edge_button.show()
+    else:
+        edge_text.hide()
+        edge_image.hide()
+        edge_button.hide()
+
+def catalog_a():
+    global line_4, a_image, a_button, a_path
+    file_catalog = QFileDialog()
+    file_catalog.setNameFilter("Images (*.png *.jpg *.jpeg)")
+    file_catalog.selectNameFilter("Images (*.png *.jpg *.jpeg)")
+
+    if file_catalog.exec_():
+        a_path = file_catalog.selectedFiles()[0]
+        a_image.setPixmap(QPixmap(a_path).scaled(50, 50))
+        line_4.addWidget(a_image)
+        line_4.addWidget(a_button)
+
+
+def catalog_r():
+    global line_2, r_image, r_button, r_path
+    file_catalog = QFileDialog()
+    file_catalog.setNameFilter("Images (*.png *.jpg *.jpeg)")
+    file_catalog.selectNameFilter("Images (*.png *.jpg *.jpeg)")
+
+    if file_catalog.exec_():
+        r_path = file_catalog.selectedFiles()[0]
+        r_image.setPixmap(QPixmap(r_path).scaled(50, 50))
+        line_2.addWidget(r_image)
+        line_2.addWidget(r_button)
+
+def catalog_edge():
+    global line_3, edge_image, edge_button, edge_path
+    file_catalog = QFileDialog()
+    file_catalog.setNameFilter("Images (*.png *.jpg *.jpeg)")
+    file_catalog.selectNameFilter("Images (*.png *.jpg *.jpeg)")
+
+    if file_catalog.exec_():
+        edge_path = file_catalog.selectedFiles()[0]
+        edge_image.setPixmap(QPixmap(edge_path).scaled(50, 50))
+        line_3.addWidget(edge_image)
+        line_3.addWidget(edge_button)
+
+def save_images():
+    global a_path, r_path, edge_path
+    try:
+        for i in action_lst:
+            if i.isChecked():
+                if a_path != None:
+                    collections_lst[i.text()][1][coin_face_value.currentText() + " " + coin_name.text() + " " + coin_year.text()]["Зображення"]["Аверс"] = a_path
+                    with open("collection_list.json", "w", encoding="utf-8") as file:
+                        json.dump(collections_lst, file, ensure_ascii=False)
+                else:
+                    error_dialog = QDialog()
+                    error_dialog.setWindowTitle("Помилка: Не завантажено фото аверса")
+                    error_dialog.resize(700, 100)
+
+                    error_dialog.show()
+                    error_dialog.exec()
+                if r_path != None:
+                    collections_lst[i.text()][1][coin_face_value.currentText() + " " + coin_name.text() + " " + coin_year.text()]["Зображення"]["Реверс"] = r_path
+                    with open("collection_list.json", "w", encoding="utf-8") as file:
+                        json.dump(collections_lst, file, ensure_ascii=False)
+                else:
+                    error_dialog = QDialog()
+                    error_dialog.setWindowTitle("Помилка: Не завантажено фото реверса")
+                    error_dialog.resize(700, 100)
+
+                    error_dialog.show()
+                    error_dialog.exec()
+                if edge_path != None:
+                    collections_lst[i.text()][1][coin_face_value.currentText() + " " + coin_name.text() + " " + coin_year.text()]["Зображення"]["Гурт"] = edge_path
+                    with open("collection_list.json", "w", encoding="utf-8") as file:
+                        json.dump(collections_lst, file, ensure_ascii=False)
+        a_path = None
+        r_path = None
+        edge_path = None
+        coin_metal.setCurrentIndex(0)
+        coin_quality.setCurrentIndex(0)
+        coin_year.clear()
+        coin_face_value.setCurrentIndex(0)
+        coin_country.clear()
+        coin_name.clear()
+        coin_value.clear()
+    except:
+        error_dialog = QDialog()
+        error_dialog.setWindowTitle("Помилка: Монета не додана")
+        error_dialog.resize(700, 100)
+
+        error_dialog.show()
+        error_dialog.exec()
+
+def load_coins():
+    global coin_bar, collections_lst, group_, is_coin
+    coin_bar.clear()
+    with open("collection_list.json", "r", encoding="utf-8") as file:
+        collections_lst = json.load(file)
+    for i in action_lst:
+        if i.isChecked():
+            for q in collections_lst[i.text()][1]:
+                action = QAction(QIcon(collections_lst[i.text()][1][q]["Зображення"]["Аверс"]), q)
+                action.setCheckable(True)
+                coin_bar.addAction(action)
+                coin_bar.setIconSize(QSize(64, 64))
+                group_.addAction(action)
+                _action_lst.append(action)
+                is_coin = True
+
+def delete_coin():
+    global coin_bar, is_coin_follow, is_coin
+    for i in action_lst:
+        if i.isChecked():
+            for q in _action_lst:
+                if q.isChecked():
+                    is_coin_follow = True
+                    _action_lst.remove(q)
+                    collections_lst[i.text()][1].pop(q.text())
+                    coin_bar.removeAction(q)
+                    if len(collections_lst[i.text()][1]) == 0:
+                        is_coin = False
+    if is_coin_follow:
+        pass
+    else:
+        dialog = QDialog()
+        dialog.setWindowTitle("Помилка: Монета не обрана")
+        dialog.resize(600, 100)
+
+        dialog.exec()
+    with open("collection_list.json", "w", encoding="utf-8") as file:
+        json.dump(collections_lst, file, ensure_ascii=False)
+    paragraph_change_2()
+
+def check():
+    global l_coin_value
+    try:
+        dialog = QDialog()
+        dialog.resize(750, 500)
+
+
+        main_line = QVBoxLayout()
+        line_1 = QHBoxLayout()
+        line_2 = QHBoxLayout()
+        line_3 = QHBoxLayout()
+        line_4 = QHBoxLayout()
+
+        for i in action_lst:
+            if i.isChecked():
+                for q in _action_lst:
+                    if q.isChecked():
+                        l_a_map = QPixmap(collections_lst[i.text()][1][q.text()]["Зображення"]["Аверс"])
+                        l_a_image = QLabel()
+                        l_a_image.setPixmap(l_a_map.scaled(200, 200))
+                        l_r_map = QPixmap(collections_lst[i.text()][1][q.text()]["Зображення"]["Реверс"])
+                        l_r_image = QLabel()
+                        l_r_image.setPixmap(l_r_map.scaled(200, 200))
+                        try:
+                            l_edge_map = QPixmap(collections_lst[i.text()][1][q.text()]["Зображення"]["Гурт"])
+                            l_edge_image = QLabel()
+                            l_edge_image.setPixmap(l_edge_map.scaled(200, 200))
+                        except:
+                            pass
+                        dialog.setWindowTitle("Перегляд монети " + q.text())
+                        l_coin_year = QLabel(str(collections_lst[i.text()][1][q.text()]["Рік"]))
+                        l_coin_year_text = QLabel("Рік монети:")
+                        l_coin_face_value = QLabel(collections_lst[i.text()][1][q.text()]["Номінал"])
+                        l_coin_face_value_text = QLabel("Номінал монети:")
+                        l_coin_country = QLabel(collections_lst[i.text()][1][q.text()]["Країна"].title())
+                        l_coin_quality = QLabel(collections_lst[i.text()][1][q.text()]["Стан"])
+                        l_coin_metal = QLabel(collections_lst[i.text()][1][q.text()]["Метал"])
+                        l_coin_metal_text = QLabel("Метал:")
+                        l_coin_value = QLineEdit(str(collections_lst[i.text()][1][q.text()]["Вартість"]))
+                        l_coin_value_text = QLabel("вартість монети:")
+                        save_button = QPushButton("Зберегти")
+
+
+        line_1.addWidget(l_a_image, alignment=Qt.AlignRight)
+        line_1.addWidget(l_r_image, alignment=Qt.AlignLeft)
+        line_2.addWidget(l_coin_country, alignment=Qt.AlignRight)
+        line_2.addWidget(l_coin_quality, alignment=Qt.AlignLeft)
+        line_3.addWidget(l_coin_year_text)
+        line_3.addWidget(l_coin_year)
+        line_3.addWidget(l_coin_metal_text)
+        line_3.addWidget(l_coin_metal)
+        line_4.addWidget(l_coin_face_value_text)
+        line_4.addWidget(l_coin_face_value)
+        line_4.addWidget(l_coin_value_text)
+        line_4.addWidget(l_coin_value)
+        line_4.addWidget(save_button)
+        try:
+            line_1.addWidget(l_edge_image, alignment=Qt.AlignTop)
+        except:
+            pass
+        main_line.addLayout(line_1)
+        main_line.addLayout(line_3)
+        main_line.addLayout(line_4)
+        main_line.addLayout(line_2)
+
+        dialog.setLayout(main_line)
+
+        save_button.clicked.connect(value_change)
+
+        dialog.setMaximumSize(dialog.size())
+        dialog.setMinimumSize(dialog.size())
+
+        dialog.exec()
+    except:
+        error_dialog = QDialog()
+        error_dialog.setWindowTitle("Помилка: Монета не обрана")
+        error_dialog.resize(600, 100)
+
+        error_dialog.exec()
+
+def update_price():
+    global price, a_text_2, data, action_lst
+    price = 0
+    try:
+        q_price = data["Price data"][-1]
+    except:
+        pass
+    for i in collections_lst:
+        for q in collections_lst[i][1]:
+            price += collections_lst[i][1][q]["Вартість"]
+    a_text_2.setText("Загальна ціна: " + str(price))
+    try:
+        if price == q_price:
+            pass
+        else:
+            data["Price data"].append(price)
+            data["Date data"].append(format_date(str(datetime.datetime.now()).split()[0]))
+    except:
+        data["Price data"].append(price)
+        data["Date data"].append(format_date(str(datetime.datetime.now()).split()[0]))
+    with open("data.json", "w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False)
+    graph.plot(data["Date data"], data["Price data"], pen=pen, symbol="o", symbolBrush = (200, 100, 100), symbolSize = 15)
+    format_price_graph(data["Price data"], data["Date data"])
+
+def value_change():
+    global l_coin_value
+    for i in action_lst:
+        if i.isChecked():
+            for q in _action_lst:
+                if q.isChecked():
+                    collections_lst[i.text()][1][q.text()]["Вартість"] = int(l_coin_value.text())
+    with open("collection_list.json", "w", encoding="utf-8") as file:
+        json.dump(collections_lst, file, ensure_ascii=False)
+
+
+def search():
+    global search_line, ukr_coins
+    ukr_coins.clear()
+    for i in data["Ukr"]:
+        if i.count(search_line.text()) > 0:
+            ukr_coins.addItem(i)
+    ukr_coins.setCurrentIndex(0)
+    try:
+        change_ukr()
+    except:
+        pass
+def change_ukr():
+    global ukr_coins, price_text
+    price_text.setText(data["Price"][data["Ukr"].index(ukr_coins.currentText())])
+
+paragraph_change()
+
+tab_1.currentChanged.connect(paragraph_change)
+tab_2.currentChanged.connect(paragraph_change_2)
+create_collection.clicked.connect(_create_collection_)
+redact_collection_button.clicked.connect(redact_collection)
+delete_collection_button.clicked.connect(delete_collection)
+add_coin.clicked.connect(_add_coin_)
+add_image_button.clicked.connect(load_image)
+search_button.clicked.connect(search)
+
+
+line = QVBoxLayout()
+line.addWidget(tab_1, alignment=Qt.AlignTop)
+line_1 = QVBoxLayout()
+line_2 = QVBoxLayout()
+line_3 = QHBoxLayout()
+line_4 = QHBoxLayout()
+line_ = QHBoxLayout()
+line_.addWidget(a_text_1)
+line_.addWidget(a_text_2)
+_line = QHBoxLayout()
+_line.addWidget(search_line)
+_line.addWidget(search_button)
+line_1.addWidget(no_collection_text, alignment= Qt.AlignTop)
+line_1.addWidget(collections_bar, alignment=Qt.AlignTop)
+line_1.addWidget(redact_collection_button)
+line_1.addWidget(delete_collection_button)
+line_2.addLayout(line_)
+line_2.addWidget(graph)
+line_2.addLayout(_line)
+line_2.addWidget(ukr_coins)
+line_2.addWidget(price_text, alignment = Qt.AlignHCenter)
+line.addWidget(collection_name)
+line_3.addWidget(image_text)
+line_3.addWidget(images_list)
+line_4.addWidget(help_frame_1)
+line_4.addWidget(help_frame_2)
+line.addLayout(line_3)
+line.addWidget(create_collection)
+line.addLayout(line_1)
+line.addLayout(line_2)
+line.addLayout(line_4)
+screen.setLayout(line)
+ukr_coins.activated.connect(change_ukr)
+
+screen.show()
+app.exec()
