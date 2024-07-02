@@ -1,0 +1,77 @@
+import json
+
+from bs4 import BeautifulSoup as bs
+import requests
+import datetime
+from functios_and_classes import *
+
+date = str(datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")).split(", ")[0].replace("/", ".")
+
+with open("data.json", "r", encoding="utf-8") as file:
+    data = json.load(file)
+
+if data["TDate"] == date:
+    pass
+else:
+    try:
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+
+        r = requests.get("https://www.ua-coins.info/ua/catalog/all/all", headers=headers).text
+        soup = bs(r, "lxml")
+        block_1 = soup.find_all("td", attrs={"data-title": "Назва"})
+        block_2 = soup.find_all("td", attrs={"data-title": "Номінал"})
+        block_3 = soup.find_all("td", attrs={"data-title": f"Вартість {date}"})
+        block_2 = str(block_2).replace('<td style="text-align:center;">Номінал</td>, <td style="text-align:center;">Тираж тис.</td>, <td style="text-align:center;">Вартість 19.06.2024</td>, <td data-title="Номінал" style="text-align:center;">', "").replace('</td>, <td data-title="Номінал" style="text-align:center;">', "").replace('</td>, <td data-title="Тираж тис." style="text-align:center;">', "")
+        lst_1 = []
+        lst_2 = []
+        p_lst_price = []
+        block_2 = block_2.replace('[<td data-title="Номінал" style="text-align:center;">', "").replace('</td>]', "").split()
+        for i in range(0, len(block_2)):
+            if block_2[i] in ["(біметал)", "грн.", "карб."]:
+                pass
+            else:
+                if block_2[i] in ["200000", "1000000", "2000000"]:
+                    lst_1.append(block_2[i] + " карб.")
+                else:
+                    lst_1.append(block_2[i] + " грн.")
+        for i in range(2, len(lst_1)+len(lst_1) + 1, 2):
+            try:
+                lst_2.append(str(str(str(block_1).split(";")[i].split(">")).split("<")[1]).split(",")[1].replace("'", ""))
+            except:
+                print(667)
+        p_lst_name = []
+        for i in range(len(lst_1)):
+            p_lst_name.append(lst_2[i][1:] + " " + lst_1[i])
+        for i in str(str(block_3).replace("<td", "").replace("td>", "").replace("немає даних", "NA").split(";")).split("\\n"):
+            if i.count("NA") == 1:
+               p_lst_price.append("NA")
+            try:
+                int(i.replace(" ", "").replace("\\u2009", ""))
+                p_lst_price.append(i.replace(" ", "").replace("\\u2009", ""))
+            except:
+                pass
+        data["Ukr"] = p_lst_name
+        data["Price"] = p_lst_price
+
+        data["TDate"] = date
+        with open("data.json", "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False)
+
+        with open("data.json", "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False)
+    except:
+        no_internet_app = QApplication([])
+        no_internet_scr = QWidget()
+        no_internet_scr.resize(500, 300)
+        no_internet_text = QLabel("Помилка: Немає доступу до інтернету.\nІнформація про ціни монет може бути застарілою")
+        line = QVBoxLayout()
+
+        line.addWidget(no_internet_text)
+
+        no_internet_scr.setLayout(line)
+
+        no_internet_scr.show()
+        no_internet_app.exec()
